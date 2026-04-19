@@ -1,0 +1,19 @@
+question_id,dimension,question_text,scale_min,scale_max,collectivist_direction
+IDV_INDIV_01,IDV,"How important is it to you to have sufficient time for your personal or family life?",1,5,high
+IDV_INDIV_02,IDV,"How important is it to you to have freedom to adopt your own approach to the job?",1,5,high
+IDV_COLL_01,IDV,"How important is it to you to work with people who cooperate well with one another?",1,5,high
+IDV_COLL_02,IDV,"How important is it to you to live in a desirable area for you and your family?",1,5,high
+IDV_INDIV_03,IDV,"In choosing an ideal job, how important would it be to you to have an opportunity for high earnings?",1,5,low
+IDV_INDIV_04,IDV,"In choosing an ideal job, how important would it be to you to have an opportunity for advancement?",1,5,low
+IDV_COLL_03,IDV,"In choosing an ideal job, how important would it be to you to work with people who cooperate well with one another?",1,5,high
+IDV_COLL_04,IDV,"In choosing an ideal job, how important would it be to you to have good working conditions such as ventilation and lighting?",1,5,high
+HARM_01,IDV,"How strongly do you agree: Maintaining harmony with others is more important than expressing my personal opinions.",1,5,high
+HARM_02,IDV,"How strongly do you agree: When there is a conflict in a group, it is better to compromise than to insist on one's own position.",1,5,high
+HARM_03,IDV,"How strongly do you agree: The needs of the group should take priority over the needs of the individual.",1,5,high
+HARM_04,IDV,"How strongly do you agree: It is important to maintain good relationships with others even if it means not pursuing personal goals.",1,5,high
+HARM_05,IDV,"How strongly do you agree: Helping each other is a fundamental characteristic of human society.",1,5,high
+HARM_06,IDV,"How strongly do you agree: Community cooperation is the foundation of social life.",1,5,high
+INDIV_01,IDV,"How strongly do you agree: I prefer to make my own decisions rather than follow group consensus.",1,5,low
+INDIV_02,IDV,"How strongly do you agree: Personal achievement is more important than group success.",1,5,low
+INDIV_03,IDV,"How strongly do you agree: I should be free to pursue my own goals even if they differ from what others around me expect.",1,5,low
+INDIV_04,IDV,"How strongly do you agree: Individual rights are more important than community obligations.",1,5,low
