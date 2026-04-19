@@ -24,7 +24,6 @@ Outputs:
     framing_effect.csv    — ANOVA results across framing conditions
 """
 
-import json
 import warnings
 import pandas as pd
 import numpy as np
@@ -39,8 +38,8 @@ warnings.filterwarnings("ignore")
 # ══════════════════════════════════════════════════════════════
 
 CONFIG = {
-    # Input file from hf_vsm_probe.py
-    "responses_file": "vsm_responses_hf.csv",
+    # Must match the model_id used in hf_vsm_probe.py
+    "model_id": "Qwen/Qwen2.5-7B-Instruct",
 
     # Indonesia's official Hofstede IDV = 14
     # Source: Kharchenko et al. (KDD '25, Table 4)
@@ -83,12 +82,6 @@ CONFIG = {
 
     "bootstrap_n": 1000,
 
-    # Output file paths
-    "out_summary"        : "results_summary.csv",
-    "out_items"          : "item_analysis.csv",
-    "out_reliability"    : "reliability.csv",
-    "out_logit_leakage"  : "logit_leakage.csv",
-    "out_framing_effect" : "framing_effect.csv",
 }
 
 
@@ -465,6 +458,17 @@ def main():
     print("=" * 60)
     print("  NVAS & IDV Calculator — HuggingFace Probe Output")
     print("=" * 60)
+
+    slug = CONFIG["model_id"].replace("/", "_").replace(" ", "_")
+    CONFIG["responses_file"] = f"vsm_responses_hf_{slug}.csv"
+    CONFIG["out_summary"]       = f"results_summary_{slug}.csv"
+    CONFIG["out_items"]         = f"item_analysis_{slug}.csv"
+    CONFIG["out_reliability"]   = f"reliability_{slug}.csv"
+    CONFIG["out_logit_leakage"] = f"logit_leakage_{slug}.csv"
+    CONFIG["out_framing_effect"]= f"framing_effect_{slug}.csv"
+
+    print(f"   Model : {CONFIG['model_id']}")
+    print(f"   Input : {CONFIG['responses_file']}\n")
 
     df = load_and_validate(CONFIG["responses_file"])
 
