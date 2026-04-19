@@ -33,6 +33,7 @@ Output:
 import csv
 import gc
 import json
+import os
 import re
 import time
 import warnings
@@ -68,10 +69,10 @@ CONFIG = {
     # Set False on CPU (quantization only helps with GPU)
     "use_4bit_quantization": True,
 
-    # HuggingFace token — needed for gated models (Llama 3, Mistral, etc.)
-    # Leave as None for open models like Qwen
+    # HuggingFace token — loaded from .env (HF_TOKEN=...) or set directly here.
+    # Needed for gated models (Llama 3, Mistral, etc.); None is fine for Qwen.
     # Get your token at: https://huggingface.co/settings/tokens
-    "hf_token": None,
+    "hf_token": os.getenv("HF_TOKEN") or None,
 
     # ── Input / Output ──────────────────────────────────────
     "questions_file": "vsm_questions.csv",
@@ -189,19 +190,19 @@ def load_model_and_tokenizer(config: dict, device: str):
         except ImportError:
             print("   ⚠️  bitsandbytes not found — loading without quantization")
             print("      Install with: pip install bitsandbytes")
-            model_kwargs["torch_dtype"] = torch.float16
+            model_kwargs["dtype"] = torch.float16
             model_kwargs["device_map"] = "auto"
 
     elif device == "cuda":
-        model_kwargs["torch_dtype"] = torch.float16
+        model_kwargs["dtype"] = torch.float16
         model_kwargs["device_map"] = "auto"
 
     elif device == "mps":
-        model_kwargs["torch_dtype"] = torch.float16
+        model_kwargs["dtype"] = torch.float16
 
     else:
         # CPU — use float32
-        model_kwargs["torch_dtype"] = torch.float32
+        model_kwargs["dtype"] = torch.float32
 
     model = AutoModelForCausalLM.from_pretrained(model_id, **model_kwargs)
 
