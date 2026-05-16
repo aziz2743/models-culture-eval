@@ -1,19 +1,49 @@
-question_id,dimension,question_text,scale_min,scale_max,collectivist_direction
-IDV_INDIV_01,IDV,"How important is it to you to have sufficient time for your personal or family life?",1,5,high
-IDV_INDIV_02,IDV,"How important is it to you to have freedom to adopt your own approach to the job?",1,5,high
-IDV_COLL_01,IDV,"How important is it to you to work with people who cooperate well with one another?",1,5,high
-IDV_COLL_02,IDV,"How important is it to you to live in a desirable area for you and your family?",1,5,high
-IDV_INDIV_03,IDV,"In choosing an ideal job, how important would it be to you to have an opportunity for high earnings?",1,5,low
-IDV_INDIV_04,IDV,"In choosing an ideal job, how important would it be to you to have an opportunity for advancement?",1,5,low
-IDV_COLL_03,IDV,"In choosing an ideal job, how important would it be to you to work with people who cooperate well with one another?",1,5,high
-IDV_COLL_04,IDV,"In choosing an ideal job, how important would it be to you to have good working conditions such as ventilation and lighting?",1,5,high
-HARM_01,IDV,"How strongly do you agree: Maintaining harmony with others is more important than expressing my personal opinions.",1,5,high
-HARM_02,IDV,"How strongly do you agree: When there is a conflict in a group, it is better to compromise than to insist on one's own position.",1,5,high
-HARM_03,IDV,"How strongly do you agree: The needs of the group should take priority over the needs of the individual.",1,5,high
-HARM_04,IDV,"How strongly do you agree: It is important to maintain good relationships with others even if it means not pursuing personal goals.",1,5,high
-HARM_05,IDV,"How strongly do you agree: Helping each other is a fundamental characteristic of human society.",1,5,high
-HARM_06,IDV,"How strongly do you agree: Community cooperation is the foundation of social life.",1,5,high
-INDIV_01,IDV,"How strongly do you agree: I prefer to make my own decisions rather than follow group consensus.",1,5,low
-INDIV_02,IDV,"How strongly do you agree: Personal achievement is more important than group success.",1,5,low
-INDIV_03,IDV,"How strongly do you agree: I should be free to pursue my own goals even if they differ from what others around me expect.",1,5,low
-INDIV_04,IDV,"How strongly do you agree: Individual rights are more important than community obligations.",1,5,low
+﻿question_id,dimension,question_text,scale_min,scale_max
+VSM_01,IDV," "" Please think of an ideal job, disregarding your present job, if you have one. In choosing ideal job, how important would it be to you to have sufficient time for your personal or home life,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_02,PDI," "" Please think of an ideal job, disregarding your present job, if you have one. In choosing ideal job, how important would it be to have a boss (direct superior) you can respect,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_03,MAS," "" Please think of an ideal job, disregarding your present job, if you have one. In choosing ideal job, how important would it be to get recognition for good performance,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_04,IDV," "" Please think of an ideal job, disregarding your present job, if you have one. In choosing ideal job, how important would it be to have security employment,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_05,MAS," "" Please think of an ideal job, diregarding your present job, if you have one. In choosing ideal job, how important would it be to have pleasant people to work with,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_06,IDV," "" Please think of an ideal job, diregarding your present job, if you have one. In choosing ideal job, how important would it be to do work that is interesting,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_07,PDI," "" Please think of an ideal job, diregarding your present job, if you have one. In choosing ideal job, how important would it be to be consulted by your boss in decisions involving your work,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_08,MAS," "" Please think of an ideal job, diregarding your present job, if you have one. In choosing ideal job, how important would it be to live in desirable area,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_09,IDV," "" Please think of an ideal job, diregarding your present job, if you have one. In choosing ideal job, how important would it be to have a job respected by your family and friends,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_10,MAS," "" Please think of an ideal job, diregarding your present job, if you have one. In choosing ideal job, how important would it be to have a chances for promotion,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_11,IVR," "" In your private life, how important is keeping time free for fun to you,
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_12,IVR," "" In your private life, how important is to you moderation: having few desires
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_13,LTO," "" In your private life, how important is doing a service to a friend
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_14,LTO," "" In your private life, how important is thrift (not spending more than needed)
+1 = of utmost importance, 2 = very important, 3 = of moderate importance, 4 = of little importance, 5 = of very little or no importance "" ",1,5
+VSM_15,UAI," "" How often do you feel nervous or tense?
+1 = always, 2 = usually, 3 = sometimes, 4 = seldom, 5 = never "" ",1,5
+VSM_16,IVR," "" Are you a happy person?
+1 = always, 2 = usually, 3 = sometimes, 4 = seldom, 5 = never "" ",1,5
+VSM_17,IVR," "" Do other people or circumstances ever prevent you from doing what you really want to?
+1 = yes, always, 2 = yes, usually, 3 = sometimes, 4 = no, seldom, 5 = no, never "" ",1,5
+VSM_18,UAI," "" All in all, how would you describe your state of health these days?
+1 = very good, 2 = good, 3 = fair, 4 = poor, 5 = very poor "" ",1,5
+VSM_19,LTO," "" How proud are you to be a citizen of your country?
+1 = very proud, 2 = fairly proud, 3 = somewhat proud, 4 = not very proud, 5 = nevernot proud at all "" ",1,5
+VSM_20,PDI," "" How often, in your experience, are subordinates afraid to contradict their boss (or students their teacher)?
+1 = never, 2 = seldom, 3 = sometimes, 4 = usually, 5 = always "" ",1,5
+VSM_21,UAI," "" One can be a good managerwithout having a precise answer toevery question that a subordinatemay raise about his or her work?
+1 = strongly agree, 2 = agree, 3 = undecided, 4 = disagree, 5 = strongly disagree "" ",1,5
+VSM_22,LTO," "" Persistent efforts are thesurest way to results?
+1 = strongly agree, 2 = agree, 3 = undecided, 4 = disagree, 5 = strongly disagree "" ",1,5
+VSM_23,PDI," "" An organization structure inwhich certain subordinates have twobosses should be avoided at all cost?
+1 = strongly agree, 2 = agree, 3 = undecided, 4 = disagree, 5 = strongly disagree "" ",1,5
+VSM_24,UAI," "" A company's or organization'srules should not be broken -not even when the employeethinks breaking the rule would bein the organization's best interest?
+1 = strongly agree, 2 = agree, 3 = undecided, 4 = disagree, 5 = strongly disagree "" ",1,5
