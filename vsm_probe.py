@@ -53,15 +53,15 @@ _BNB_AVAILABLE = importlib.util.find_spec("bitsandbytes") is not None
 
 CONFIG = {
     # ── Model ───────────────────────────────────────────────
-#    "model_id": "microsoft/Phi-3.5-mini-instruct",
-# Microsoft return NaN
-#    "model_id": "Qwen/Qwen2.5-7B-Instruct",
+     "model_id": "Qwen/Qwen2.5-7B-Instruct",
+#    "model_id": "microsoft/Phi-3.5-mini-instruct",  # DynamicCache API mismatch
 #    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
-#     "model_id": "HuggingFaceH4/zephyr-7b-beta",
-#     "model_id": "google/gemma-2-9b-it",    # needs HF access approval
-#     "model_id" : "google/gemma-4-E4B-it",  # requires transformers 5.x
-#     "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
-
+#    "model_id": "HuggingFaceH4/zephyr-7b-beta",
+#    "model_id": "google/gemma-2-9b-it",       # needs HF access approval
+#    "model_id": "google/gemma-3-4b-it",       # NaN under 4-bit quantization
+#    "model_id": "google/gemma-4-E4B-it",      # requires transformers 5.x
+#    "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
+     "model_id": "google/gemma-3-4b-it",
     # 4-bit quantization (GPU only, requires bitsandbytes)
     "use_4bit_quantization": True,
 
@@ -274,6 +274,13 @@ def query_model(messages: list[dict], model, tokenizer,
 
     new_tokens = outputs.sequences[0][input_len:]
     raw_text   = tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+    # Some models (e.g. Gemma 3) wrap digits in special tokens that get stripped.
+    # Fall back to decoding without skipping, then remove angle-bracket tokens.
+    if not raw_text and len(new_tokens) > 0:
+        raw_full = tokenizer.decode(new_tokens, skip_special_tokens=False)
+        raw_text = re.sub(r"<[^>]+>", "", raw_full).strip()
+
     score      = extract_score(raw_text, scale_min, scale_max)
     lp         = digit_logprob(outputs.scores, tokenizer, scale_min, scale_max)
 
@@ -342,7 +349,7 @@ def run_probe(config: dict) -> None:
 
     fieldnames = [
         "question_id", "run_number", "dimension", "question_text",
-        "framing_condition","prompt" "raw_response", "extracted_score",
+        "framing_condition", "prompt", "raw_response", "extracted_score",
         "scale_min", "scale_max", "logprob",
         "input_tokens", "generation_time_s",
         "model_id", "timestamp",
@@ -379,7 +386,7 @@ def run_probe(config: dict) -> None:
                             "dimension"        : q["dimension"],
                             "question_text"    : q["question_text"],
                             "framing_condition": framing,
-                            "prompt"         : messages,
+                            "prompt"           : messages,
                             "raw_response"     : result["raw_response"],
                             "extracted_score"  : result["extracted_score"] if result["extracted_score"] is not None else "",
                             "scale_min"        : scale_min,
