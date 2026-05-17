@@ -1,6 +1,9 @@
 torch
 transformers
+accelerate
 numpy
 pandas
 scipy
 tqdm
+python-dotenv
+bitsandbytes>=0.46.1

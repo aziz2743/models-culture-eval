@@ -30,16 +30,21 @@ import json
 import os
 import re
 import time
+import importlib.util
 import warnings
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 import torch
+from dotenv import load_dotenv
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
+load_dotenv()  # loads HF_TOKEN from .env into os.environ
 warnings.filterwarnings("ignore", category=UserWarning)
+
+_BNB_AVAILABLE = importlib.util.find_spec("bitsandbytes") is not None
 
 
 # ══════════════════════════════════════════════════════════════
@@ -119,20 +124,25 @@ def load_model_and_tokenizer(config: dict, device: str):
         "trust_remote_code": True,
     }
 
-    if config["use_4bit_quantization"] and device == "cuda":
-        try:
-            kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.float16,
-                bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type="nf4",
-            )
-            kwargs["device_map"] = "auto"
-            print("4-bit quantization enabled")
-        except Exception:
-            print("bitsandbytes not available — loading FP16")
-            kwargs["dtype"]      = torch.float16
-            kwargs["device_map"] = "auto"
+    if config["use_4bit_quantization"] and device == "cuda" and _BNB_AVAILABLE:
+        from transformers import BitsAndBytesConfig
+        kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
+        # Keep all layers on GPU — CPU offload conflicts with 4-bit bitsandbytes
+        gpu_mem = torch.cuda.get_device_properties(0).total_memory
+        reserved_mb = 512
+        kwargs["max_memory"] = {0: f"{(gpu_mem // 1024**2) - reserved_mb}MiB"}
+        kwargs["device_map"] = "auto"
+        print("4-bit quantization enabled")
+    elif config["use_4bit_quantization"] and device == "cuda" and not _BNB_AVAILABLE:
+        print("bitsandbytes not installed — falling back to FP16")
+        print("Install with: pip install bitsandbytes>=0.46.1")
+        kwargs["dtype"]      = torch.float16
+        kwargs["device_map"] = "auto"
     elif device == "cuda":
         kwargs["dtype"]      = torch.float16
         kwargs["device_map"] = "auto"

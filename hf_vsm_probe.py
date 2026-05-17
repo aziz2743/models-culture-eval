@@ -32,6 +32,7 @@ Output:
 
 import csv
 import gc
+import importlib.util
 import json
 import os
 import re
@@ -41,16 +42,16 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
 from tqdm import tqdm
 
 import torch
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    BitsAndBytesConfig,
-)
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
+load_dotenv()
 warnings.filterwarnings("ignore", category=UserWarning)
+
+_BNB_AVAILABLE = importlib.util.find_spec("bitsandbytes") is not None
 
 
 # ══════════════════════════════════════════════════════════════
@@ -175,23 +176,21 @@ def load_model_and_tokenizer(config: dict, device: str):
     }
 
     # Quantization (GPU only)
-    if config.get("use_4bit_quantization") and device == "cuda":
-        try:
-            from bitsandbytes import BitsAndBytesConfig as BnBConfig
-            quant_config = BnBConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.float16,
-                bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type="nf4",
-            )
-            model_kwargs["quantization_config"] = quant_config
-            model_kwargs["device_map"] = "auto"
-            print("   Using 4-bit quantization (reduced VRAM usage)")
-        except ImportError:
-            print("   ⚠️  bitsandbytes not found — loading without quantization")
-            print("      Install with: pip install bitsandbytes")
-            model_kwargs["dtype"] = torch.float16
-            model_kwargs["device_map"] = "auto"
+    if config.get("use_4bit_quantization") and device == "cuda" and _BNB_AVAILABLE:
+        from transformers import BitsAndBytesConfig
+        model_kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
+        model_kwargs["device_map"] = "auto"
+        print("   Using 4-bit quantization (reduced VRAM usage)")
+    elif config.get("use_4bit_quantization") and device == "cuda" and not _BNB_AVAILABLE:
+        print("   ⚠️  bitsandbytes not installed — falling back to FP16")
+        print("      Install with: pip install bitsandbytes>=0.46.1")
+        model_kwargs["dtype"] = torch.float16
+        model_kwargs["device_map"] = "auto"
 
     elif device == "cuda":
         model_kwargs["dtype"] = torch.float16
