@@ -7,3 +7,5 @@ scipy
 tqdm
 python-dotenv
 bitsandbytes>=0.46.1
+sentencepiece
+protobuf

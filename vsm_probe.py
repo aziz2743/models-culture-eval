@@ -53,7 +53,14 @@ _BNB_AVAILABLE = importlib.util.find_spec("bitsandbytes") is not None
 
 CONFIG = {
     # ── Model ───────────────────────────────────────────────
-    "model_id": "Qwen/Qwen2.5-7B-Instruct",
+#    "model_id": "microsoft/Phi-3.5-mini-instruct",
+# Microsoft return NaN
+#    "model_id": "Qwen/Qwen2.5-7B-Instruct",
+#    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
+     "model_id": "HuggingFaceH4/zephyr-7b-beta",
+#     "model_id": "google/gemma-2-9b-it",    # needs HF access approval
+#     "model_id" : "google/gemma-4-E4B-it",  # requires transformers 5.x
+#     "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
 
     # 4-bit quantization (GPU only, requires bitsandbytes)
     "use_4bit_quantization": True,
@@ -335,7 +342,7 @@ def run_probe(config: dict) -> None:
 
     fieldnames = [
         "question_id", "run_number", "dimension", "question_text",
-        "framing_condition", "raw_response", "extracted_score",
+        "framing_condition","prompt" "raw_response", "extracted_score",
         "scale_min", "scale_max", "logprob",
         "input_tokens", "generation_time_s",
         "model_id", "timestamp",
@@ -372,6 +379,7 @@ def run_probe(config: dict) -> None:
                             "dimension"        : q["dimension"],
                             "question_text"    : q["question_text"],
                             "framing_condition": framing,
+                            "prompt"         : messages,
                             "raw_response"     : result["raw_response"],
                             "extracted_score"  : result["extracted_score"] if result["extracted_score"] is not None else "",
                             "scale_min"        : scale_min,
