@@ -57,7 +57,7 @@ CONFIG = {
 # Microsoft return NaN
 #    "model_id": "Qwen/Qwen2.5-7B-Instruct",
 #    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
-     "model_id": "HuggingFaceH4/zephyr-7b-beta",
+#     "model_id": "HuggingFaceH4/zephyr-7b-beta",
 #     "model_id": "google/gemma-2-9b-it",    # needs HF access approval
 #     "model_id" : "google/gemma-4-E4B-it",  # requires transformers 5.x
 #     "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
