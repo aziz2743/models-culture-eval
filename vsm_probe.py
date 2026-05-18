@@ -39,7 +39,7 @@ import pandas as pd
 import torch
 from dotenv import load_dotenv
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoConfig, AutoModelForCausalLM, AutoModelForImageTextToText, AutoTokenizer
 
 load_dotenv()  # loads HF_TOKEN from .env into os.environ
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -53,15 +53,16 @@ _BNB_AVAILABLE = importlib.util.find_spec("bitsandbytes") is not None
 
 CONFIG = {
     # ── Model ───────────────────────────────────────────────
-     "model_id": "Qwen/Qwen2.5-7B-Instruct",
+#     "model_id": "Qwen/Qwen2.5-7B-Instruct",
 #    "model_id": "microsoft/Phi-3.5-mini-instruct",  # DynamicCache API mismatch
 #    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
 #    "model_id": "HuggingFaceH4/zephyr-7b-beta",
 #    "model_id": "google/gemma-2-9b-it",       # needs HF access approval
 #    "model_id": "google/gemma-3-4b-it",       # NaN under 4-bit quantization
 #    "model_id": "google/gemma-4-E4B-it",      # requires transformers 5.x
-#    "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
-     "model_id": "google/gemma-3-4b-it",
+    "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
+#     "model_id": "google/gemma-3-4b-it",
+#     "model_id": "aisingapore/Qwen-SEA-LION-v4-4B-VL",
     # 4-bit quantization (GPU only, requires bitsandbytes)
     "use_4bit_quantization": True,
 
@@ -158,7 +159,13 @@ def load_model_and_tokenizer(config: dict, device: str):
     else:
         kwargs["dtype"] = torch.float32
 
-    model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs)
+    remote_cfg = AutoConfig.from_pretrained(
+        model_id, token=config["hf_token"], cache_dir=config["cache_dir"], trust_remote_code=True
+    )
+    _VL_SUFFIXES = ("vl", "vision", "multimodal")
+    is_vl = any(s in type(remote_cfg).__name__.lower() for s in _VL_SUFFIXES)
+    ModelCls = AutoModelForImageTextToText if is_vl else AutoModelForCausalLM
+    model = ModelCls.from_pretrained(model_id, **kwargs)
     if device in ("cpu", "mps") and "device_map" not in kwargs:
         model = model.to(device)
     model.eval()
