@@ -60,8 +60,9 @@ CONFIG = {
 #    "model_id": "google/gemma-2-9b-it",       # needs HF access approval
 #    "model_id": "google/gemma-3-4b-it",       # NaN under 4-bit quantization
 #    "model_id": "google/gemma-4-E4B-it",      # requires transformers 5.x
-    "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
-#     "model_id": "google/gemma-3-4b-it",
+#    "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
+#     "model_id": "google/gemma-3-1b-it",
+     "model_id": "microsoft/Phi-3.5-mini-instruct",
 #     "model_id": "aisingapore/Qwen-SEA-LION-v4-4B-VL",
     # 4-bit quantization (GPU only, requires bitsandbytes)
     "use_4bit_quantization": True,
