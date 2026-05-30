@@ -55,17 +55,18 @@ CONFIG = {
     # ── Model ───────────────────────────────────────────────
 #     "model_id": "Qwen/Qwen2.5-7B-Instruct",
 #    "model_id": "microsoft/Phi-3.5-mini-instruct",  # DynamicCache API mismatch
-#    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
+    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
 #    "model_id": "HuggingFaceH4/zephyr-7b-beta",
 #    "model_id": "google/gemma-2-9b-it",       # needs HF access approval
 #    "model_id": "google/gemma-3-4b-it",       # NaN under 4-bit quantization
 #    "model_id": "google/gemma-4-E4B-it",      # requires transformers 5.x
 #    "model_id": "mistralai/Mistral-7B-Instruct-v0.3",
 #     "model_id": "google/gemma-3-1b-it",
-     "model_id": "microsoft/Phi-3.5-mini-instruct",
+#     "model_id": "microsoft/Phi-3.5-mini-instruct",
 #     "model_id": "aisingapore/Qwen-SEA-LION-v4-4B-VL",
+#    "model_id" : "indonesian-nlp/gpt2",
     # 4-bit quantization (GPU only, requires bitsandbytes)
-    "use_4bit_quantization": True,
+    "use_4bit_quantization": False,
 
     # HF token — required for gated models (Llama, Mistral)
     "hf_token": os.getenv("HF_TOKEN") or None,
@@ -84,7 +85,7 @@ CONFIG = {
     "target_culture": "Indonesian",
 
     # ── Generation ───────────────────────────────────────────
-    "temperature"     : 0.0,   # 0 = greedy/deterministic
+    "temperature"     : 0.7,   # 0 = greedy/deterministic
     "max_new_tokens"  : 5,
 
     # ── Performance ──────────────────────────────────────────
@@ -146,15 +147,18 @@ def load_model_and_tokenizer(config: dict, device: str):
         reserved_mb = 512
         kwargs["max_memory"] = {0: f"{(gpu_mem // 1024**2) - reserved_mb}MiB"}
         kwargs["device_map"] = "auto"
+        kwargs["offload_folder"] = "offload_cache"
         print("4-bit quantization enabled")
     elif config["use_4bit_quantization"] and device == "cuda" and not _BNB_AVAILABLE:
         print("bitsandbytes not installed — falling back to FP16")
         print("Install with: pip install bitsandbytes>=0.46.1")
-        kwargs["dtype"]      = torch.float16
-        kwargs["device_map"] = "auto"
+        kwargs["dtype"]          = torch.float16
+        kwargs["device_map"]     = "auto"
+        kwargs["offload_folder"] = "offload_cache"
     elif device == "cuda":
-        kwargs["dtype"]      = torch.float16
-        kwargs["device_map"] = "auto"
+        kwargs["dtype"]          = torch.float16
+        kwargs["device_map"]     = "auto"
+        kwargs["offload_folder"] = "offload_cache"
     elif device == "mps":
         kwargs["dtype"] = torch.float16
     else:
