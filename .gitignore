@@ -30,6 +30,7 @@ env/
 *.safetensors
 *.gguf
 ~/.cache/huggingface/
+offload_cache/
 
 # Environment
 .env
