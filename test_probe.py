@@ -5,16 +5,20 @@ without special tokens, and the logprob for each digit 1-5.
 """
 
 import os
-import re
+import sys
 import importlib.util
 import torch
 from dotenv import load_dotenv
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoConfig, AutoTokenizer, AutoModelForCausalLM, AutoModelForImageTextToText
+
+# Makes CUDA assertion failures point at the right line instead of a later call
+os.environ.setdefault("CUDA_LAUNCH_BLOCKING", "1")
 
 load_dotenv()
 
 # ── Change this to whichever model you want to test ──────────────
-MODEL_ID = "google/gemma-3-1b-it"
+# MODEL_ID = "google/gemma-3-1b-it"
+MODEL_ID = "aisingapore/Apertus-SEA-LION-v4-8B-IT"
 # MODEL_ID = "HuggingFaceH4/zephyr-7b-beta"
 # MODEL_ID = "google/gemma-3-4b-it"    # NaN under 4-bit (bitsandbytes incompatible)
 # MODEL_ID = "microsoft/Phi-3.5-mini-instruct"  # DynamicCache API mismatch (transformers 4.47+)
@@ -87,12 +91,20 @@ def main():
     else:
         kwargs["dtype"] = torch.float32
 
-    model = AutoModelForCausalLM.from_pretrained(MODEL_ID, **kwargs)
+    remote_cfg = AutoConfig.from_pretrained(MODEL_ID, token=HF_TOKEN, trust_remote_code=True)
+    _VL_SUFFIXES = ("vl", "vision", "multimodal")
+    is_vl = any(s in type(remote_cfg).__name__.lower() for s in _VL_SUFFIXES)
+    ModelCls = AutoModelForImageTextToText if is_vl else AutoModelForCausalLM
+    if is_vl:
+        print(f"Detected VL config ({type(remote_cfg).__name__}) — using AutoModelForImageTextToText")
+
+    model = ModelCls.from_pretrained(MODEL_ID, **kwargs)
     model.eval()
     device = next(model.parameters()).device
 
     # Sanity-check via generate (avoids DynamicCache API issues in custom model code)
     dummy_ids = tokenizer("Hello", return_tensors="pt").input_ids.to(device)
+    sanity_ok = False
     with torch.no_grad():
         try:
             test_out = model.generate(dummy_ids, max_new_tokens=1,
@@ -103,8 +115,14 @@ def main():
                 print("   Fix: set use_4bit_quantization=False in vsm_probe.py CONFIG")
             else:
                 print("\n✓ Logits look healthy (no NaN)")
+                sanity_ok = True
         except Exception as e:
             print(f"\n⚠️  Sanity check failed: {e}")
+            print("   The CUDA context is now corrupt — re-run with quantization disabled.")
+            print("   Set BNB_AVAILABLE = False at the top of this script to force FP16.")
+
+    if not sanity_ok:
+        sys.exit(1)
 
     # ── Run inference ─────────────────────────────────────────────
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048)
