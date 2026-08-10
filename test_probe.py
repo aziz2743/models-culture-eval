@@ -18,8 +18,10 @@ load_dotenv()
 
 # ── Change this to whichever model you want to test ──────────────
 # MODEL_ID = "google/gemma-3-1b-it"
-MODEL_ID = "aisingapore/Apertus-SEA-LION-v4-8B-IT"
+# MODEL_ID = "aisingapore/Apertus-SEA-LION-v4-8B-IT"
+# MODEL_ID = "indolem/indobert-base-uncased"
 # MODEL_ID = "HuggingFaceH4/zephyr-7b-beta"
+MODEL_ID = "Yellow-AI-NLP/komodo-7b-base"
 # MODEL_ID = "google/gemma-3-4b-it"    # NaN under 4-bit (bitsandbytes incompatible)
 # MODEL_ID = "microsoft/Phi-3.5-mini-instruct"  # DynamicCache API mismatch (transformers 4.47+)
 # ─────────────────────────────────────────────────────────────────
