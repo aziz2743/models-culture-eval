@@ -56,7 +56,7 @@ CONFIG = {
 #     "model_id": "Qwen/Qwen2.5-7B-Instruct",
 #    "model_id": "microsoft/Phi-3.5-mini-instruct",  # DynamicCache API mismatch
 #    "model_id": "deepseek-ai/deepseek-llm-7b-chat",
-    "model_id": "HuggingFaceH4/zephyr-7b-beta",
+#    "model_id": "HuggingFaceH4/zephyr-7b-beta",
 #    "model_id": "google/gemma-2-9b-it",       # needs HF access approval
 #    "model_id": "google/gemma-3-4b-it",       # NaN under 4-bit quantization
 #    "model_id": "google/gemma-4-E4B-it",      # requires transformers 5.x
@@ -66,6 +66,7 @@ CONFIG = {
 #     "model_id": "aisingapore/Qwen-SEA-LION-v4-4B-VL", # previous test
 #    "model_id": "aisingapore/Apertus-SEA-LION-v4-8B-IT", # not working
 #    "model_id" : "indonesian-nlp/gpt2",
+    "model_id" : "Yellow-AI-NLP/komodo-7b-base",
     # 4-bit quantization (GPU only, requires bitsandbytes)
     "use_4bit_quantization": False,
 
@@ -73,7 +74,7 @@ CONFIG = {
     "hf_token": os.getenv("HF_TOKEN") or None,
 
     # ── Input / Output ───────────────────────────────────────
-    "questions_file": "vsm_questions.csv",
+    "questions_file": "vsm_questions_indo.csv",
 
     # ── Experimental design ──────────────────────────────────
     # Runs per question for reliability (Khan et al. FAccT'25 use 3; Hadar-Shoval use 10)
@@ -363,7 +364,7 @@ def run_probe(config: dict) -> None:
     fieldnames = [
         "question_id", "run_number", "dimension", "question_text",
         "framing_condition", "prompt", "raw_response", "extracted_score",
-        "scale_min", "scale_max", "logprob",
+        "temperature", "scale_min", "scale_max", "logprob",
         "input_tokens", "generation_time_s",
         "model_id", "timestamp",
     ]
@@ -402,6 +403,7 @@ def run_probe(config: dict) -> None:
                             "prompt"           : messages,
                             "raw_response"     : result["raw_response"],
                             "extracted_score"  : result["extracted_score"] if result["extracted_score"] is not None else "",
+                            "temperature"      : config["temperature"],
                             "scale_min"        : scale_min,
                             "scale_max"        : scale_max,
                             "logprob"          : result["logprob"] if result["logprob"] is not None else "",
@@ -419,6 +421,7 @@ def run_probe(config: dict) -> None:
                             "framing_condition": framing,
                             "raw_response"     : f"ERROR: {str(e)[:120]}",
                             "extracted_score"  : "",
+                            "temperature"      : config["temperature"],
                             "scale_min"        : scale_min,
                             "scale_max"        : scale_max,
                             "logprob"          : "",
