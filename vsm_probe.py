@@ -74,7 +74,7 @@ CONFIG = {
     "hf_token": os.getenv("HF_TOKEN") or None,
 
     # ── Input / Output ───────────────────────────────────────
-    "questions_file": "vsm_questions_indo.csv",
+    "questions_file": "vsm_questions.csv",
 
     # ── Experimental design ──────────────────────────────────
     # Runs per question for reliability (Khan et al. FAccT'25 use 3; Hadar-Shoval use 10)
@@ -87,7 +87,7 @@ CONFIG = {
     "target_culture": "Indonesian",
 
     # ── Generation ───────────────────────────────────────────
-    "temperature"     : 0.7,   # 0 = greedy/deterministic
+    "temperature"     : 0.0,   # 0 = greedy/deterministic
     "max_new_tokens"  : 5,
 
     # ── Performance ──────────────────────────────────────────
