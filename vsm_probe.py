@@ -349,10 +349,76 @@ def load_questions(filepath: str) -> list[dict]:
 # MAIN RUNNER
 # ══════════════════════════════════════════════════════════════
 
-def run_probe(config: dict) -> None:
+OUTPUT_FIELDNAMES = [
+    "question_id", "run_number", "dimension", "question_text",
+    "framing_condition", "prompt", "raw_response", "extracted_score",
+    "temperature", "scale_min", "scale_max", "logprob",
+    "input_tokens", "generation_time_s",
+    "model_id", "timestamp",
+]
+
+
+def _print_banner() -> None:
     print("=" * 60)
     print("  VSM Cultural Alignment Probe")
     print("=" * 60)
+
+
+def _print_experiment_summary(config: dict, device: str, n_questions: int,
+                              total_calls: int, output_path: Path) -> None:
+    print(f"\nExperiment summary:")
+    print(f"  Model      : {config['model_id']}")
+    print(f"  Device     : {device.upper()}")
+    print(f"  Questions  : {n_questions}")
+    print(f"  Framings   : {config['framing_conditions']}")
+    print(f"  Runs/Q     : {config['runs_per_question']}")
+    print(f"  Total calls: {total_calls}")
+    print(f"  Output     : {output_path}\n")
+
+
+def _build_result_row(q: dict, run: int, framing: str, messages: list[dict],
+                      model, tokenizer, config: dict, device: str,
+                      scale_min: int, scale_max: int) -> dict:
+    """Runs one probe call and returns a CSV-ready row, capturing errors inline
+    so a single failed call doesn't abort the rest of the experiment."""
+    row = {
+        "question_id"      : q["question_id"],
+        "run_number"       : run,
+        "dimension"        : q["dimension"],
+        "question_text"    : q["question_text"],
+        "framing_condition": framing,
+        "temperature"      : config["temperature"],
+        "scale_min"        : scale_min,
+        "scale_max"        : scale_max,
+        "model_id"         : config["model_id"],
+    }
+    try:
+        result = query_model(
+            messages, model, tokenizer,
+            config, device, scale_min, scale_max
+        )
+        row.update({
+            "prompt"           : messages,
+            "raw_response"     : result["raw_response"],
+            "extracted_score"  : result["extracted_score"] if result["extracted_score"] is not None else "",
+            "logprob"          : result["logprob"] if result["logprob"] is not None else "",
+            "input_tokens"     : result["input_tokens"],
+            "generation_time_s": result["generation_time_s"],
+        })
+    except Exception as e:
+        row.update({
+            "raw_response"     : f"ERROR: {str(e)[:120]}",
+            "extracted_score"  : "",
+            "logprob"          : "",
+            "input_tokens"     : 0,
+            "generation_time_s": 0,
+        })
+    row["timestamp"] = datetime.now().isoformat()
+    return row
+
+
+def run_probe(config: dict) -> None:
+    _print_banner()
 
     device              = detect_device()
     model, tokenizer    = load_model_and_tokenizer(config, device)
@@ -367,25 +433,10 @@ def run_probe(config: dict) -> None:
     slug        = config["model_id"].replace("/", "_").replace(" ", "_")
     output_path = Path(f"vsm_responses_{slug}.csv")
 
-    print(f"\nExperiment summary:")
-    print(f"  Model      : {config['model_id']}")
-    print(f"  Device     : {device.upper()}")
-    print(f"  Questions  : {len(questions)}")
-    print(f"  Framings   : {config['framing_conditions']}")
-    print(f"  Runs/Q     : {config['runs_per_question']}")
-    print(f"  Total calls: {total_calls}")
-    print(f"  Output     : {output_path}\n")
-
-    fieldnames = [
-        "question_id", "run_number", "dimension", "question_text",
-        "framing_condition", "prompt", "raw_response", "extracted_score",
-        "temperature", "scale_min", "scale_max", "logprob",
-        "input_tokens", "generation_time_s",
-        "model_id", "timestamp",
-    ]
+    _print_experiment_summary(config, device, len(questions), total_calls, output_path)
 
     with open(output_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=OUTPUT_FIELDNAMES)
         writer.writeheader()
 
         pbar = tqdm(total=total_calls, desc="Probing", unit="call")
@@ -404,40 +455,11 @@ def run_probe(config: dict) -> None:
                 )
 
                 for run in range(1, config["runs_per_question"] + 1):
-                    row = {
-                        "question_id"      : q["question_id"],
-                        "run_number"       : run,
-                        "dimension"        : q["dimension"],
-                        "question_text"    : q["question_text"],
-                        "framing_condition": framing,
-                        "temperature"      : config["temperature"],
-                        "scale_min"        : scale_min,
-                        "scale_max"        : scale_max,
-                        "model_id"         : config["model_id"],
-                    }
-                    try:
-                        result = query_model(
-                            messages, model, tokenizer,
-                            config, device, scale_min, scale_max
-                        )
-                        row.update({
-                            "prompt"           : messages,
-                            "raw_response"     : result["raw_response"],
-                            "extracted_score"  : result["extracted_score"] if result["extracted_score"] is not None else "",
-                            "logprob"          : result["logprob"] if result["logprob"] is not None else "",
-                            "input_tokens"     : result["input_tokens"],
-                            "generation_time_s": result["generation_time_s"],
-                        })
-                    except Exception as e:
-                        row.update({
-                            "raw_response"     : f"ERROR: {str(e)[:120]}",
-                            "extracted_score"  : "",
-                            "logprob"          : "",
-                            "input_tokens"     : 0,
-                            "generation_time_s": 0,
-                        })
-                    row["timestamp"] = datetime.now().isoformat()
-
+                    row = _build_result_row(
+                        q, run, framing, messages,
+                        model, tokenizer, config, device,
+                        scale_min, scale_max,
+                    )
                     writer.writerow(row)
                     f.flush()   # crash-safe: write after every response
                     pbar.update(1)
