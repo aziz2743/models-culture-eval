@@ -68,7 +68,7 @@ CONFIG = {
 #    "model_id" : "indonesian-nlp/gpt2",
     "model_id" : "Yellow-AI-NLP/komodo-7b-base",
     # 4-bit quantization (GPU only, requires bitsandbytes)
-    "use_4bit_quantization": False,
+    "use_4bit_quantization": True,
 
     # HF token — required for gated models (Llama, Mistral)
     "hf_token": os.getenv("HF_TOKEN") or None,
@@ -151,13 +151,10 @@ def load_model_and_tokenizer(config: dict, device: str):
         kwargs["device_map"] = "auto"
         kwargs["offload_folder"] = "offload_cache"
         print("4-bit quantization enabled")
-    elif config["use_4bit_quantization"] and device == "cuda" and not _BNB_AVAILABLE:
-        print("bitsandbytes not installed — falling back to FP16")
-        print("Install with: pip install bitsandbytes>=0.46.1")
-        kwargs["dtype"]          = torch.float16
-        kwargs["device_map"]     = "auto"
-        kwargs["offload_folder"] = "offload_cache"
     elif device == "cuda":
+        if config["use_4bit_quantization"] and not _BNB_AVAILABLE:
+            print("bitsandbytes not installed — falling back to FP16")
+            print("Install with: pip install bitsandbytes>=0.46.1")
         kwargs["dtype"]          = torch.float16
         kwargs["device_map"]     = "auto"
         kwargs["offload_folder"] = "offload_cache"
@@ -233,6 +230,27 @@ def extract_score(text: str, scale_min: int, scale_max: int):
     return None
 
 
+_digit_token_id_cache: dict[tuple[int, int], int | None] = {}
+
+
+def _digit_token_id(tokenizer, scale_min: int, scale_max: int) -> int | None:
+    """Single-token id representing a digit in [scale_min, scale_max], cached
+    per (scale_min, scale_max) since it's invariant across calls for a given tokenizer."""
+    key = (scale_min, scale_max)
+    if key not in _digit_token_id_cache:
+        token_id = None
+        for digit in range(scale_min, scale_max + 1):
+            for token_str in [str(digit), f" {digit}"]:
+                ids = tokenizer.encode(token_str, add_special_tokens=False)
+                if len(ids) == 1:
+                    token_id = ids[0]
+                    break
+            if token_id is not None:
+                break
+        _digit_token_id_cache[key] = token_id
+    return _digit_token_id_cache[key]
+
+
 def digit_logprob(scores_tuple, tokenizer, scale_min: int, scale_max: int) -> float | None:
     """
     Returns the log-probability of the first generated digit token.
@@ -240,15 +258,12 @@ def digit_logprob(scores_tuple, tokenizer, scale_min: int, scale_max: int) -> fl
     """
     if not scores_tuple:
         return None
+    token_id = _digit_token_id(tokenizer, scale_min, scale_max)
+    if token_id is None:
+        return None
     first_logits = scores_tuple[0]          # shape (batch, vocab)
     log_probs    = torch.log_softmax(first_logits[0], dim=-1)
-
-    for digit in range(scale_min, scale_max + 1):
-        for token_str in [str(digit), f" {digit}"]:
-            ids = tokenizer.encode(token_str, add_special_tokens=False)
-            if len(ids) == 1:
-                return round(log_probs[ids[0]].item(), 6)
-    return None
+    return round(log_probs[token_id].item(), 6)
 
 
 @torch.no_grad()
@@ -389,47 +404,39 @@ def run_probe(config: dict) -> None:
                 )
 
                 for run in range(1, config["runs_per_question"] + 1):
+                    row = {
+                        "question_id"      : q["question_id"],
+                        "run_number"       : run,
+                        "dimension"        : q["dimension"],
+                        "question_text"    : q["question_text"],
+                        "framing_condition": framing,
+                        "temperature"      : config["temperature"],
+                        "scale_min"        : scale_min,
+                        "scale_max"        : scale_max,
+                        "model_id"         : config["model_id"],
+                    }
                     try:
                         result = query_model(
                             messages, model, tokenizer,
                             config, device, scale_min, scale_max
                         )
-                        row = {
-                            "question_id"      : q["question_id"],
-                            "run_number"       : run,
-                            "dimension"        : q["dimension"],
-                            "question_text"    : q["question_text"],
-                            "framing_condition": framing,
+                        row.update({
                             "prompt"           : messages,
                             "raw_response"     : result["raw_response"],
                             "extracted_score"  : result["extracted_score"] if result["extracted_score"] is not None else "",
-                            "temperature"      : config["temperature"],
-                            "scale_min"        : scale_min,
-                            "scale_max"        : scale_max,
                             "logprob"          : result["logprob"] if result["logprob"] is not None else "",
                             "input_tokens"     : result["input_tokens"],
                             "generation_time_s": result["generation_time_s"],
-                            "model_id"         : config["model_id"],
-                            "timestamp"        : datetime.now().isoformat(),
-                        }
+                        })
                     except Exception as e:
-                        row = {
-                            "question_id"      : q["question_id"],
-                            "run_number"       : run,
-                            "dimension"        : q["dimension"],
-                            "question_text"    : q["question_text"],
-                            "framing_condition": framing,
+                        row.update({
                             "raw_response"     : f"ERROR: {str(e)[:120]}",
                             "extracted_score"  : "",
-                            "temperature"      : config["temperature"],
-                            "scale_min"        : scale_min,
-                            "scale_max"        : scale_max,
                             "logprob"          : "",
                             "input_tokens"     : 0,
                             "generation_time_s": 0,
-                            "model_id"         : config["model_id"],
-                            "timestamp"        : datetime.now().isoformat(),
-                        }
+                        })
+                    row["timestamp"] = datetime.now().isoformat()
 
                     writer.writerow(row)
                     f.flush()   # crash-safe: write after every response
